@@ -1,4 +1,5 @@
 import { DomainError } from '../../../domain/errors/DomainError.js';
+import { serializarErro } from '../../../shared/logging/serializarErro.js';
 
 const STATUS_POR_CODIGO = {
   VALIDATION_ERROR: 400,
@@ -23,7 +24,7 @@ export function errorHandler(logger = console) {
       });
     }
 
-    logger.error?.({ erro: err }, 'Erro não tratado');
+    logger.error?.({ erro: serializarErro(err) }, 'Erro não tratado');
     return res.status(500).json({
       error: {
         code: 'INTERNAL_ERROR',

@@ -30,16 +30,28 @@ export class AdicionarServicoAoAgendamento {
 
     const duracaoTotalMinutos = await calcularDuracaoTotalMinutos(this.servicoRepository, agendamento.servicoIds);
 
-    if (agendamento.banhistaId) {
-      await garantirSemConflitoDeAgenda({
-        agendamentoRepository: this.agendamentoRepository,
-        servicoRepository: this.servicoRepository,
-        banhistaId: agendamento.banhistaId,
-        agendamentoAtual: agendamento,
-        duracaoTotalMinutos,
-      });
+    if (!agendamento.banhistaId) {
+      return this.agendamentoRepository.atualizar(agendamento);
     }
 
-    return this.agendamentoRepository.atualizar(agendamento);
+    const inicio = agendamento.dataHoraInicio;
+    const fim = agendamento.dataHoraFim(duracaoTotalMinutos);
+
+    return this.agendamentoRepository.comLockDeAgenda(
+      agendamento.banhistaId,
+      inicio,
+      fim,
+      async (agendamentoRepositoryTx) => {
+        await garantirSemConflitoDeAgenda({
+          agendamentoRepository: agendamentoRepositoryTx,
+          servicoRepository: this.servicoRepository,
+          banhistaId: agendamento.banhistaId,
+          agendamentoAtual: agendamento,
+          duracaoTotalMinutos,
+        });
+
+        return agendamentoRepositoryTx.atualizar(agendamento);
+      },
+    );
   }
 }

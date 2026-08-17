@@ -22,24 +22,36 @@ export class ReagendarAgendamento {
       throw new ForbiddenError('Você não tem acesso a este agendamento');
     }
 
-    agendamento.reagendar({ data, hora });
-
     const novaDataHoraInicio = Agendamento.combinarDataHora(data, hora);
     if (novaDataHoraInicio.getTime() <= Date.now()) {
       throw new ValidationError('Não é possível agendar em um horário no passado');
     }
 
-    if (agendamento.banhistaId) {
-      const duracaoTotalMinutos = await calcularDuracaoTotalMinutos(this.servicoRepository, agendamento.servicoIds);
-      await garantirSemConflitoDeAgenda({
-        agendamentoRepository: this.agendamentoRepository,
-        servicoRepository: this.servicoRepository,
-        banhistaId: agendamento.banhistaId,
-        agendamentoAtual: agendamento,
-        duracaoTotalMinutos,
-      });
+    agendamento.reagendar({ data, hora });
+
+    if (!agendamento.banhistaId) {
+      return this.agendamentoRepository.atualizar(agendamento);
     }
 
-    return this.agendamentoRepository.atualizar(agendamento);
+    const duracaoTotalMinutos = await calcularDuracaoTotalMinutos(this.servicoRepository, agendamento.servicoIds);
+    const inicio = agendamento.dataHoraInicio;
+    const fim = agendamento.dataHoraFim(duracaoTotalMinutos);
+
+    return this.agendamentoRepository.comLockDeAgenda(
+      agendamento.banhistaId,
+      inicio,
+      fim,
+      async (agendamentoRepositoryTx) => {
+        await garantirSemConflitoDeAgenda({
+          agendamentoRepository: agendamentoRepositoryTx,
+          servicoRepository: this.servicoRepository,
+          banhistaId: agendamento.banhistaId,
+          agendamentoAtual: agendamento,
+          duracaoTotalMinutos,
+        });
+
+        return agendamentoRepositoryTx.atualizar(agendamento);
+      },
+    );
   }
 }

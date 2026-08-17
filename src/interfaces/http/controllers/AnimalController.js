@@ -24,16 +24,16 @@ export class AnimalController {
   }
 
   cadastrar = async (req, res) => {
-    const animal = await this.usecases.cadastrarAnimal.execute({ usuarioId: req.user.id, ...req.body });
+    const animal = await this.usecases.cadastrarAnimal.execute({ ...req.body, usuarioId: req.user.id });
     res.status(201).json({ data: serializarAnimal(animal) });
   };
 
   atualizar = async (req, res) => {
     const animal = await this.usecases.atualizarAnimal.execute({
+      ...req.body,
       animalId: req.params.id,
       requesterId: req.user.id,
       requesterFuncoes: req.user.funcoes,
-      ...req.body,
     });
     res.status(200).json({ data: serializarAnimal(animal) });
   };
@@ -45,16 +45,18 @@ export class AnimalController {
 
   registrarProntuario = async (req, res) => {
     const prontuario = await this.usecases.registrarProntuario.execute({
-      animalId: req.params.id,
       ...req.body,
+      animalId: req.params.id,
     });
     res.status(201).json({ data: serializarProntuario(prontuario) });
   };
 
   atualizarProntuario = async (req, res) => {
     const prontuario = await this.usecases.atualizarProntuario.execute({
-      animalId: req.params.id,
       ...req.body,
+      animalId: req.params.id,
+      requesterId: req.user.id,
+      requesterFuncoes: req.user.funcoes,
     });
     res.status(200).json({ data: serializarProntuario(prontuario) });
   };

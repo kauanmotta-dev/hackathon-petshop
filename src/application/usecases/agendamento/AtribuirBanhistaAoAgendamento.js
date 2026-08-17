@@ -25,17 +25,21 @@ export class AtribuirBanhistaAoAgendamento {
     }
 
     const duracaoTotalMinutos = await calcularDuracaoTotalMinutos(this.servicoRepository, agendamento.servicoIds);
+    const inicio = agendamento.dataHoraInicio;
+    const fim = agendamento.dataHoraFim(duracaoTotalMinutos);
 
-    await garantirSemConflitoDeAgenda({
-      agendamentoRepository: this.agendamentoRepository,
-      servicoRepository: this.servicoRepository,
-      banhistaId,
-      agendamentoAtual: agendamento,
-      duracaoTotalMinutos,
+    return this.agendamentoRepository.comLockDeAgenda(banhistaId, inicio, fim, async (agendamentoRepositoryTx) => {
+      await garantirSemConflitoDeAgenda({
+        agendamentoRepository: agendamentoRepositoryTx,
+        servicoRepository: this.servicoRepository,
+        banhistaId,
+        agendamentoAtual: agendamento,
+        duracaoTotalMinutos,
+      });
+
+      agendamento.atribuirBanhista(banhistaId);
+
+      return agendamentoRepositoryTx.atualizar(agendamento);
     });
-
-    agendamento.atribuirBanhista(banhistaId);
-
-    return this.agendamentoRepository.atualizar(agendamento);
   }
 }

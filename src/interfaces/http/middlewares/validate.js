@@ -18,6 +18,7 @@ export function validate(schema) {
 
     req.body = resultado.data.body ?? req.body;
     req.query = resultado.data.query ?? req.query;
+    req.params = resultado.data.params ?? req.params;
     return next();
   };
 }

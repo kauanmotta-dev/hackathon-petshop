@@ -50,7 +50,11 @@ export class EstoqueController {
   };
 
   consultarSaldo = async (req, res) => {
-    const saldo = await this.usecases.consultarSaldoEstoque.execute({ estoqueId: req.params.id });
+    const saldo = await this.usecases.consultarSaldoEstoque.execute({
+      estoqueId: req.params.id,
+      requesterId: req.user.id,
+      requesterFuncoes: req.user.funcoes,
+    });
     res.status(200).json({ data: saldo });
   };
 }

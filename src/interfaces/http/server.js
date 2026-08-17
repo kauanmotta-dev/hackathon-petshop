@@ -1,6 +1,7 @@
 import { env } from '../../shared/config/env.js';
 import { container } from '../../infrastructure/container.js';
 import { createApp } from './app.js';
+import { serializarErro } from '../../shared/logging/serializarErro.js';
 
 const app = createApp(container);
 
@@ -18,3 +19,7 @@ async function encerrar(sinal) {
 
 process.on('SIGINT', () => encerrar('SIGINT'));
 process.on('SIGTERM', () => encerrar('SIGTERM'));
+
+process.on('unhandledRejection', (erro) => {
+  container.logger.error({ erro: serializarErro(erro) }, 'unhandledRejection não tratado');
+});

@@ -18,8 +18,8 @@ export class AgendamentoController {
 
   criar = async (req, res) => {
     const agendamento = await this.usecases.criarAgendamento.execute({
-      clienteId: req.user.id,
       ...req.body,
+      clienteId: req.user.id,
     });
     res.status(201).json({ data: serializarAgendamento(agendamento) });
   };
@@ -44,10 +44,10 @@ export class AgendamentoController {
 
   reagendar = async (req, res) => {
     const agendamento = await this.usecases.reagendarAgendamento.execute({
+      ...req.body,
       agendamentoId: req.params.id,
       requesterId: req.user.id,
       requesterFuncoes: req.user.funcoes,
-      ...req.body,
     });
     res.status(200).json({ data: serializarAgendamento(agendamento) });
   };

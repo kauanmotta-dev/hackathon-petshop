@@ -16,8 +16,8 @@ export class MensagemController {
 
   enviar = async (req, res) => {
     const mensagem = await this.usecases.enviarMensagem.execute({
-      remetenteId: req.user.id,
       ...req.body,
+      remetenteId: req.user.id,
     });
     res.status(201).json({ data: serializarMensagem(mensagem) });
   };

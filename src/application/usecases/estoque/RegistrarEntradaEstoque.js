@@ -1,5 +1,5 @@
-import { MaterialEstoque } from '../../../domain/entities/Material.js';
 import { NotFoundError } from '../../../domain/errors/NotFoundError.js';
+import { ValidationError } from '../../../domain/errors/ValidationError.js';
 
 export class RegistrarEntradaEstoque {
   constructor({ estoqueRepository, materialRepository }) {
@@ -14,13 +14,11 @@ export class RegistrarEntradaEstoque {
     const material = await this.materialRepository.buscarPorId(materialId);
     if (!material) throw new NotFoundError('Material não encontrado');
 
-    let saldo = await this.estoqueRepository.buscarSaldo(estoqueId, materialId);
-    if (!saldo) {
-      saldo = new MaterialEstoque({ materialId, estoqueId, quantidade: 0 });
+    const quantidadeNumerica = Number(quantidade);
+    if (!Number.isFinite(quantidadeNumerica) || quantidadeNumerica <= 0) {
+      throw new ValidationError('Quantidade de entrada deve ser maior que zero');
     }
 
-    saldo.registrarEntrada(Number(quantidade));
-
-    return this.estoqueRepository.salvarSaldo(saldo);
+    return this.estoqueRepository.incrementarSaldo(estoqueId, materialId, quantidadeNumerica);
   }
 }

@@ -1,5 +1,6 @@
-import { MaterialEstoque } from '../../../domain/entities/Material.js';
 import { NotFoundError } from '../../../domain/errors/NotFoundError.js';
+import { ValidationError } from '../../../domain/errors/ValidationError.js';
+import { BusinessRuleError } from '../../../domain/errors/BusinessRuleError.js';
 
 export class RegistrarSaidaEstoque {
   constructor({ estoqueRepository, materialRepository }) {
@@ -14,13 +15,20 @@ export class RegistrarSaidaEstoque {
     const material = await this.materialRepository.buscarPorId(materialId);
     if (!material) throw new NotFoundError('Material não encontrado');
 
-    let saldo = await this.estoqueRepository.buscarSaldo(estoqueId, materialId);
-    if (!saldo) {
-      saldo = new MaterialEstoque({ materialId, estoqueId, quantidade: 0 });
+    const quantidadeNumerica = Number(quantidade);
+    if (!Number.isFinite(quantidadeNumerica) || quantidadeNumerica <= 0) {
+      throw new ValidationError('Quantidade de saída deve ser maior que zero');
     }
 
-    saldo.registrarSaida(Number(quantidade));
+    // Decremento atômico com guarda WHERE quantidade >= X no próprio UPDATE:
+    // evita que duas saídas concorrentes leiam o mesmo saldo, ambas passem na
+    // validação em memória e uma sobrescreva a outra (lost update / estoque
+    // furado silenciosamente).
+    const saldoAtualizado = await this.estoqueRepository.decrementarSaldo(estoqueId, materialId, quantidadeNumerica);
+    if (!saldoAtualizado) {
+      throw new BusinessRuleError('Estoque insuficiente para esta saída');
+    }
 
-    return this.estoqueRepository.salvarSaldo(saldo);
+    return saldoAtualizado;
   }
 }

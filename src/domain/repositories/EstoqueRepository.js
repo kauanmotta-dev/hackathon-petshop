@@ -19,6 +19,10 @@ export class EstoqueRepository {
     throw new Error('EstoqueRepository.atribuirUsuario não implementado');
   }
 
+  async usuarioVinculado(_estoqueId, _usuarioId) {
+    throw new Error('EstoqueRepository.usuarioVinculado não implementado');
+  }
+
   async buscarSaldo(_estoqueId, _materialId) {
     throw new Error('EstoqueRepository.buscarSaldo não implementado');
   }
@@ -27,7 +31,23 @@ export class EstoqueRepository {
     throw new Error('EstoqueRepository.listarSaldoPorEstoque não implementado');
   }
 
-  async salvarSaldo(_materialEstoque) {
-    throw new Error('EstoqueRepository.salvarSaldo não implementado');
+  /**
+   * Incrementa atomicamente o saldo (upsert com incremento em uma única
+   * instrução no banco), evitando o lost-update de um ciclo ler→somar→gravar
+   * valor absoluto quando duas entradas concorrem pelo mesmo material/estoque.
+   */
+  async incrementarSaldo(_estoqueId, _materialId, _quantidade) {
+    throw new Error('EstoqueRepository.incrementarSaldo não implementado');
+  }
+
+  /**
+   * Decrementa atomicamente o saldo somente se `quantidade` disponível for
+   * suficiente (guarda `WHERE quantidade >= quantidade` no mesmo UPDATE).
+   * Retorna o saldo atualizado, ou `null` se não havia saldo suficiente —
+   * evita que duas saídas concorrentes leiam o mesmo valor, ambas passem na
+   * validação em memória e uma sobrescreva a outra (lost update).
+   */
+  async decrementarSaldo(_estoqueId, _materialId, _quantidade) {
+    throw new Error('EstoqueRepository.decrementarSaldo não implementado');
   }
 }

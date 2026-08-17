@@ -1,5 +1,4 @@
 import { ValidationError } from '../errors/ValidationError.js';
-import { BusinessRuleError } from '../errors/BusinessRuleError.js';
 
 export class Material {
   constructor({ id, nome, tipo }) {
@@ -27,22 +26,5 @@ export class MaterialEstoque {
     this.materialId = materialId;
     this.estoqueId = estoqueId;
     this.quantidade = quantidade;
-  }
-
-  registrarEntrada(quantidade) {
-    if (!Number.isFinite(quantidade) || quantidade <= 0) {
-      throw new ValidationError('Quantidade de entrada deve ser maior que zero');
-    }
-    this.quantidade += quantidade;
-  }
-
-  registrarSaida(quantidade) {
-    if (!Number.isFinite(quantidade) || quantidade <= 0) {
-      throw new ValidationError('Quantidade de saída deve ser maior que zero');
-    }
-    if (quantidade > this.quantidade) {
-      throw new BusinessRuleError('Estoque insuficiente para esta saída');
-    }
-    this.quantidade -= quantidade;
   }
 }

@@ -1,3 +1,5 @@
+import { serializarErro } from '../../../shared/logging/serializarErro.js';
+
 export class NotificarInicioBanho {
   constructor({ notificationSender, logger = console }) {
     this.notificationSender = notificationSender;
@@ -9,7 +11,7 @@ export class NotificarInicioBanho {
     try {
       await this.notificationSender.enviar(clienteId, conteudo);
     } catch (erro) {
-      this.logger.error?.({ erro, agendamentoId }, 'Falha ao enviar notificação de início de banho');
+      this.logger.error?.({ erro: serializarErro(erro), agendamentoId }, 'Falha ao enviar notificação de início de banho');
     }
   }
 }

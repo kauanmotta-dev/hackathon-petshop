@@ -19,7 +19,7 @@ export const movimentacaoEstoqueSchema = z.object({
   }),
   body: z.object({
     materialId: z.coerce.number().int().positive(),
-    quantidade: z.coerce.number().positive(),
+    quantidade: z.coerce.number().int().positive(),
   }),
 });
 

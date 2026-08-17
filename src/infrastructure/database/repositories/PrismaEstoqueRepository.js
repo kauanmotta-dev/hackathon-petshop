@@ -46,6 +46,13 @@ export class PrismaEstoqueRepository extends EstoqueRepository {
     });
   }
 
+  async usuarioVinculado(estoqueId, usuarioId) {
+    const vinculo = await this.prisma.usuarioEstoque.findUnique({
+      where: { usuarioId_estoqueId: { usuarioId: Number(usuarioId), estoqueId: Number(estoqueId) } },
+    });
+    return Boolean(vinculo);
+  }
+
   async buscarSaldo(estoqueId, materialId) {
     const registro = await this.prisma.materialEstoque.findUnique({
       where: { materialId_estoqueId: { materialId: Number(materialId), estoqueId: Number(estoqueId) } },
@@ -65,21 +72,29 @@ export class PrismaEstoqueRepository extends EstoqueRepository {
     }));
   }
 
-  async salvarSaldo(materialEstoque) {
+  async incrementarSaldo(estoqueId, materialId, quantidade) {
     const salvo = await this.prisma.materialEstoque.upsert({
       where: {
-        materialId_estoqueId: {
-          materialId: materialEstoque.materialId,
-          estoqueId: materialEstoque.estoqueId,
-        },
+        materialId_estoqueId: { materialId: Number(materialId), estoqueId: Number(estoqueId) },
       },
-      update: { quantidade: materialEstoque.quantidade },
-      create: {
-        materialId: materialEstoque.materialId,
-        estoqueId: materialEstoque.estoqueId,
-        quantidade: materialEstoque.quantidade,
-      },
+      update: { quantidade: { increment: quantidade } },
+      create: { materialId: Number(materialId), estoqueId: Number(estoqueId), quantidade },
     });
     return saldoToDomain(salvo);
+  }
+
+  async decrementarSaldo(estoqueId, materialId, quantidade) {
+    const resultado = await this.prisma.materialEstoque.updateMany({
+      where: {
+        materialId: Number(materialId),
+        estoqueId: Number(estoqueId),
+        quantidade: { gte: quantidade },
+      },
+      data: { quantidade: { decrement: quantidade } },
+    });
+    if (resultado.count === 0) {
+      return null;
+    }
+    return this.buscarSaldo(estoqueId, materialId);
   }
 }

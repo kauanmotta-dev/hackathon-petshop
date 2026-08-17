@@ -20,6 +20,24 @@ function toDomain(registro) {
 
 const INCLUDE_SERVICOS = { servicos: true };
 
+function formatarDiaLocal(data) {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+}
+
+function diasLocais(inicio, fim) {
+  const cursor = new Date(inicio);
+  cursor.setHours(0, 0, 0, 0);
+  const fimDia = new Date(fim);
+  fimDia.setHours(0, 0, 0, 0);
+
+  const dias = [];
+  while (cursor <= fimDia) {
+    dias.push(formatarDiaLocal(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dias;
+}
+
 export class PrismaAgendamentoRepository extends AgendamentoRepository {
   constructor(prisma) {
     super();
@@ -85,6 +103,28 @@ export class PrismaAgendamentoRepository extends AgendamentoRepository {
       include: INCLUDE_SERVICOS,
     });
     return registros.map(toDomain);
+  }
+
+  async comLockDeAgenda(banhistaId, inicio, fim, fn) {
+    // Trava um advisory lock por dia local para cada dia que o intervalo
+    // [inicio, fim] toca — os mesmos limites de "dia" usados por
+    // listarAtivosPorBanhistaNoIntervalo. Um agendamento que atravessa a
+    // meia-noite (ex.: 23:30 + 90min) precisa travar os dois dias, senão duas
+    // atribuições concorrentes em dias-calendário diferentes, mas com
+    // horários sobrepostos, tomam locks diferentes e nenhuma serializa a
+    // outra — reabrindo a race de double-booking que este lock existe para
+    // fechar. As chaves são ordenadas para evitar deadlock entre transações
+    // que travam os mesmos dois dias em ordens diferentes.
+    const chaves = diasLocais(inicio, fim)
+      .map((dia) => `agenda-banhista:${banhistaId}:${dia}`)
+      .sort();
+
+    return this.prisma.$transaction(async (tx) => {
+      for (const chave of chaves) {
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${chave}))`;
+      }
+      return fn(new PrismaAgendamentoRepository(tx));
+    });
   }
 
   async atualizar(agendamento) {

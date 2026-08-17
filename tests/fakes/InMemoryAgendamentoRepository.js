@@ -40,4 +40,8 @@ export class InMemoryAgendamentoRepository extends AgendamentoRepository {
     this.agendamentos.set(agendamento.id, agendamento);
     return agendamento;
   }
+
+  async comLockDeAgenda(_banhistaId, _inicio, _fim, fn) {
+    return fn(this);
+  }
 }
