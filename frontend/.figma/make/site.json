@@ -1,0 +1,10 @@
+{
+  "description": "Manage pet shop operations with client bookings, staff scheduling, inventory control, and user messaging in a professional, accessible web platform.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum StatusAgendamento {
+  AGENDADO
+  EM_ANDAMENTO
+  FINALIZADO
+  CANCELADO
+}
+
+enum TipoMensagem {
+  MANUAL
+  NOTIFICACAO
+}
+
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senhaHash String   @map("senha_hash")
+  cpf       String?  @unique
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+
+  telefones          UsuarioTelefone[]
+  funcoes            UsuarioFuncao[]
+  animais            Animal[]
+  agendamentosCliente  Agendamento[]     @relation("AgendamentoCliente")
+  agendamentosBanhista Agendamento[]     @relation("AgendamentoBanhista")
+  estoques           UsuarioEstoque[]
+  mensagensEnviadas  Mensagem[]          @relation("MensagemRemetente")
+  mensagensRecebidas Mensagem[]          @relation("MensagemDestinatario")
+  movimentacoesEstoque MovimentacaoEstoque[]
+
+  @@map("usuario")
+}
+
+model Funcao {
+  id   Int    @id @default(autoincrement())
+  nome String @unique
+
+  usuarios UsuarioFuncao[]
+
+  @@map("funcao")
+}
+
+model UsuarioFuncao {
+  id        Int @id @default(autoincrement())
+  usuarioId Int @map("usuario_id")
+  funcaoId  Int @map("funcao_id")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  funcao  Funcao  @relation(fields: [funcaoId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, funcaoId])
+  @@map("usuario_funcao")
+}
+
+model UsuarioTelefone {
+  id        Int    @id @default(autoincrement())
+  usuarioId Int    @map("usuario_id")
+  telefone  String
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("usuario_telefone")
+}
+
+model Animal {
+  id             Int       @id @default(autoincrement())
+  usuarioId      Int       @map("usuario_id")
+  nome           String
+  especie        String
+  raca           String?
+  porte          String?
+  dataNascimento DateTime? @db.Date @map("data_nascimento")
+  cor            String?
+  observacoes    String    @default("")
+  condicoes      String    @default("")
+
+  usuario     Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  prontuario  Prontuario?
+  agendamentos Agendamento[]
+
+  @@map("animal")
+}
+
+model Prontuario {
+  id        Int    @id @default(autoincrement())
+  animalId  Int    @unique @map("animal_id")
+  historico String @default("")
+  vacinas   String @default("")
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@map("prontuario")
+}
+
+model Servico {
+  id              Int     @id @default(autoincrement())
+  nome            String
+  descricao       String  @default("")
+  preco           Decimal @db.Decimal(10, 2)
+  duracaoMinutos  Int     @map("duracao_minutos")
+  portes          String[] @default([])
+  especies        String[] @default([])
+  ativo           Boolean @default(true)
+
+  agendamentos AgendamentoServico[]
+
+  @@map("servico")
+}
+
+model Agendamento {
+  id         Int               @id @default(autoincrement())
+  clienteId  Int               @map("cliente_id")
+  banhistaId Int?              @map("banhista_id")
+  animalId   Int               @map("animal_id")
+  data       DateTime          @db.Date
+  hora       String
+  status     StatusAgendamento @default(AGENDADO)
+
+  cliente  Usuario @relation("AgendamentoCliente", fields: [clienteId], references: [id])
+  banhista Usuario? @relation("AgendamentoBanhista", fields: [banhistaId], references: [id])
+  animal   Animal  @relation(fields: [animalId], references: [id])
+  servicos AgendamentoServico[]
+
+  @@index([banhistaId, data])
+  @@map("agendamento")
+}
+
+model AgendamentoServico {
+  id            Int @id @default(autoincrement())
+  agendamentoId Int @map("agendamento_id")
+  servicoId     Int @map("servico_id")
+
+  agendamento Agendamento @relation(fields: [agendamentoId], references: [id], onDelete: Cascade)
+  servico     Servico     @relation(fields: [servicoId], references: [id])
+
+  @@unique([agendamentoId, servicoId])
+  @@map("agendamento_servico")
+}
+
+model Estoque {
+  id        Int    @id @default(autoincrement())
+  nome      String
+  descricao String @default("")
+
+  materiais MaterialEstoque[]
+  usuarios  UsuarioEstoque[]
+  movimentacoes MovimentacaoEstoque[]
+
+  @@map("estoque")
+}
+
+model Material {
+  id                Int     @id @default(autoincrement())
+  nome              String
+  tipo              String
+  unidade           String  @default("unidades")
+  categoria         String  @default("Geral")
+  quantidadeCritica Decimal @default(0) @db.Decimal(10, 2) @map("quantidade_critica")
+
+  estoques MaterialEstoque[]
+  movimentacoes MovimentacaoEstoque[]
+
+  @@map("material")
+}
+
+model MaterialEstoque {
+  id         Int     @id @default(autoincrement())
+  materialId Int     @map("material_id")
+  estoqueId  Int     @map("estoque_id")
+  quantidade Decimal @default(0) @db.Decimal(10, 2)
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  estoque  Estoque  @relation(fields: [estoqueId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, estoqueId])
+  @@map("material_estoque")
+}
+
+model MovimentacaoEstoque {
+  id          Int              @id @default(autoincrement())
+  materialId  Int              @map("material_id")
+  estoqueId   Int              @map("estoque_id")
+  usuarioId   Int?             @map("usuario_id")
+  tipo        TipoMovimentacao
+  quantidade  Decimal          @db.Decimal(10, 2)
+  observacoes String           @default("")
+  criadoEm    DateTime         @default(now()) @map("criado_em")
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  estoque  Estoque  @relation(fields: [estoqueId], references: [id], onDelete: Cascade)
+  usuario  Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([estoqueId, criadoEm])
+  @@map("movimentacao_estoque")
+}
+
+model UsuarioEstoque {
+  id        Int @id @default(autoincrement())
+  usuarioId Int @map("usuario_id")
+  estoqueId Int @map("estoque_id")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  estoque Estoque @relation(fields: [estoqueId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, estoqueId])
+  @@map("usuario_estoque")
+}
+
+model Mensagem {
+  id             Int          @id @default(autoincrement())
+  remetenteId    Int?         @map("remetente_id")
+  destinatarioId Int          @map("destinatario_id")
+  conteudo       String
+  tipo           TipoMensagem @default(MANUAL)
+  lida           Boolean      @default(false)
+  dataEnvio      DateTime     @default(now()) @map("data_envio")
+
+  remetente    Usuario? @relation("MensagemRemetente", fields: [remetenteId], references: [id])
+  destinatario Usuario  @relation("MensagemDestinatario", fields: [destinatarioId], references: [id])
+
+  @@index([destinatarioId, tipo])
+  @@map("mensagem")
+}
