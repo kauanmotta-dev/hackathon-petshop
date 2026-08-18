@@ -9,6 +9,7 @@ function toDomain(registro) {
     destinatarioId: registro.destinatarioId,
     conteudo: registro.conteudo,
     tipo: registro.tipo,
+    lida: registro.lida,
     dataEnvio: registro.dataEnvio,
   });
 }
@@ -26,6 +27,7 @@ export class PrismaMensagemRepository extends MensagemRepository {
         destinatarioId: mensagem.destinatarioId,
         conteudo: mensagem.conteudo,
         tipo: mensagem.tipo,
+        lida: mensagem.lida,
         dataEnvio: mensagem.dataEnvio,
       },
     });
@@ -52,5 +54,56 @@ export class PrismaMensagemRepository extends MensagemRepository {
       orderBy: { dataEnvio: 'asc' },
     });
     return registros.map(toDomain);
+  }
+
+  async marcarConversaComoLida(usuarioId, outroUsuarioId) {
+    await this.prisma.mensagem.updateMany({
+      where: {
+        tipo: TipoMensagem.MANUAL,
+        destinatarioId: Number(usuarioId),
+        remetenteId: Number(outroUsuarioId),
+        lida: false,
+      },
+      data: { lida: true },
+    });
+  }
+
+  async listarContatos(usuarioId) {
+    const id = Number(usuarioId);
+    const registros = await this.prisma.mensagem.findMany({
+      where: {
+        tipo: TipoMensagem.MANUAL,
+        OR: [{ remetenteId: id }, { destinatarioId: id }],
+      },
+      include: {
+        remetente: { select: { id: true, nome: true } },
+        destinatario: { select: { id: true, nome: true } },
+      },
+      orderBy: { dataEnvio: 'desc' },
+    });
+
+    const contatos = new Map();
+    for (const registro of registros) {
+      const outro = registro.remetenteId === id ? registro.destinatario : registro.remetente;
+      if (!outro || contatos.has(outro.id)) continue;
+      contatos.set(outro.id, {
+        usuarioId: outro.id,
+        usuarioNome: outro.nome,
+        ultimaMensagem: registro.conteudo,
+        ultimaMensagemEm: registro.dataEnvio,
+      });
+    }
+
+    const naoLidas = await this.prisma.mensagem.groupBy({
+      by: ['remetenteId'],
+      where: { tipo: TipoMensagem.MANUAL, destinatarioId: id, lida: false },
+      _count: { _all: true },
+    });
+    const naoLidasPorRemetente = new Map(naoLidas.map((item) => [item.remetenteId, item._count._all]));
+
+    return [...contatos.values()].map((contato) => ({
+      ...contato,
+      naoLidas: naoLidasPorRemetente.get(contato.usuarioId) ?? 0,
+    }));
   }
 }

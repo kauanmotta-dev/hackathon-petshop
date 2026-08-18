@@ -1,7 +1,7 @@
 import { ValidationError } from '../errors/ValidationError.js';
 
 export class Material {
-  constructor({ id, nome, tipo }) {
+  constructor({ id, nome, tipo, unidade = 'unidades', categoria = 'Geral', quantidadeCritica = 0 }) {
     if (!nome || nome.trim().length < 1) {
       throw new ValidationError('Nome do material é obrigatório');
     }
@@ -11,6 +11,9 @@ export class Material {
     this.id = id;
     this.nome = nome.trim();
     this.tipo = tipo.trim();
+    this.unidade = unidade ? unidade.trim() : 'unidades';
+    this.categoria = categoria ? categoria.trim() : 'Geral';
+    this.quantidadeCritica = Number(quantidadeCritica) || 0;
   }
 }
 

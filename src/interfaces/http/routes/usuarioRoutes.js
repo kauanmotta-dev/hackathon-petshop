@@ -12,6 +12,7 @@ import {
   cadastrarTelefoneSchema,
   atualizarUsuarioSchema,
   listarUsuariosSchema,
+  alterarSenhaSchema,
 } from '../validators/usuarioSchemas.js';
 
 export function usuarioRoutes(container) {
@@ -23,6 +24,8 @@ export function usuarioRoutes(container) {
   router.post('/login', validate(autenticarUsuarioSchema), asyncHandler(controller.autenticar));
 
   router.get('/', auth, exigirFuncao([FuncaoNome.ADMIN]), validate(listarUsuariosSchema), asyncHandler(controller.listar));
+  router.get('/equipe', auth, asyncHandler(controller.listarEquipe));
+  router.get('/me', auth, asyncHandler(controller.meuPerfil));
   router.patch('/:id', auth, validate(atualizarUsuarioSchema), asyncHandler(controller.atualizar));
   router.post(
     '/:id/funcoes',
@@ -32,6 +35,7 @@ export function usuarioRoutes(container) {
     asyncHandler(controller.atribuirFuncao),
   );
   router.post('/:id/telefones', auth, validate(cadastrarTelefoneSchema), asyncHandler(controller.cadastrarTelefone));
+  router.post('/me/senha', auth, validate(alterarSenhaSchema), asyncHandler(controller.alterarSenha));
 
   return router;
 }

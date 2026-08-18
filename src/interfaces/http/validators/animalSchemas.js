@@ -5,6 +5,11 @@ export const cadastrarAnimalSchema = z.object({
     nome: z.string().min(1),
     especie: z.string().min(1),
     raca: z.string().optional(),
+    porte: z.string().optional(),
+    dataNascimento: z.string().optional(),
+    cor: z.string().optional(),
+    observacoes: z.string().optional(),
+    condicoes: z.string().optional(),
   }),
 });
 
@@ -16,6 +21,11 @@ export const atualizarAnimalSchema = z.object({
     nome: z.string().min(1).optional(),
     especie: z.string().min(1).optional(),
     raca: z.string().optional(),
+    porte: z.string().optional(),
+    dataNascimento: z.string().optional(),
+    cor: z.string().optional(),
+    observacoes: z.string().optional(),
+    condicoes: z.string().optional(),
   }),
 });
 

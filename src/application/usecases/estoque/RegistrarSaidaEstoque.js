@@ -8,7 +8,7 @@ export class RegistrarSaidaEstoque {
     this.materialRepository = materialRepository;
   }
 
-  async execute({ estoqueId, materialId, quantidade }) {
+  async execute({ estoqueId, materialId, quantidade, observacoes, usuarioId }) {
     const estoque = await this.estoqueRepository.buscarPorId(estoqueId);
     if (!estoque) throw new NotFoundError('Estoque não encontrado');
 
@@ -28,6 +28,15 @@ export class RegistrarSaidaEstoque {
     if (!saldoAtualizado) {
       throw new BusinessRuleError('Estoque insuficiente para esta saída');
     }
+
+    await this.estoqueRepository.registrarMovimentacao({
+      estoqueId,
+      materialId,
+      usuarioId,
+      tipo: 'SAIDA',
+      quantidade: quantidadeNumerica,
+      observacoes,
+    });
 
     return saldoAtualizado;
   }

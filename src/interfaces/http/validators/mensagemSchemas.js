@@ -12,3 +12,5 @@ export const conversaParamSchema = z.object({
     usuarioId: z.coerce.number().int().positive(),
   }),
 });
+
+export const marcarLidaSchema = conversaParamSchema;

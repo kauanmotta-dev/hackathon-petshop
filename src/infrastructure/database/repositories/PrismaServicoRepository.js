@@ -6,8 +6,11 @@ function toDomain(registro) {
   return new Servico({
     id: registro.id,
     nome: registro.nome,
+    descricao: registro.descricao,
     preco: Number(registro.preco),
     duracaoMinutos: registro.duracaoMinutos,
+    portes: registro.portes,
+    especies: registro.especies,
     ativo: registro.ativo,
   });
 }
@@ -22,8 +25,11 @@ export class PrismaServicoRepository extends ServicoRepository {
     const criado = await this.prisma.servico.create({
       data: {
         nome: servico.nome,
+        descricao: servico.descricao,
         preco: servico.preco,
         duracaoMinutos: servico.duracaoMinutos,
+        portes: servico.portes,
+        especies: servico.especies,
         ativo: servico.ativo,
       },
     });
@@ -40,6 +46,11 @@ export class PrismaServicoRepository extends ServicoRepository {
     return registros.map(toDomain);
   }
 
+  async listar() {
+    const registros = await this.prisma.servico.findMany({ orderBy: { id: 'asc' } });
+    return registros.map(toDomain);
+  }
+
   async listarPorIds(ids) {
     const registros = await this.prisma.servico.findMany({ where: { id: { in: ids.map(Number) } } });
     return registros.map(toDomain);
@@ -50,8 +61,11 @@ export class PrismaServicoRepository extends ServicoRepository {
       where: { id: servico.id },
       data: {
         nome: servico.nome,
+        descricao: servico.descricao,
         preco: servico.preco,
         duracaoMinutos: servico.duracaoMinutos,
+        portes: servico.portes,
+        especies: servico.especies,
         ativo: servico.ativo,
       },
     });

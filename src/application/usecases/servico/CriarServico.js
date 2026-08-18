@@ -5,8 +5,8 @@ export class CriarServico {
     this.servicoRepository = servicoRepository;
   }
 
-  async execute({ nome, preco, duracaoMinutos }) {
-    const servico = new Servico({ nome, preco, duracaoMinutos, ativo: true });
+  async execute({ nome, descricao, preco, duracaoMinutos, portes, especies }) {
+    const servico = new Servico({ nome, descricao, preco, duracaoMinutos, portes, especies, ativo: true });
     return this.servicoRepository.salvar(servico);
   }
 }

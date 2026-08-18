@@ -20,6 +20,8 @@ export function estoqueRoutes(container) {
   const admin = exigirFuncao([FuncaoNome.ADMIN]);
 
   router.post('/', auth, admin, validate(criarEstoqueSchema), asyncHandler(controller.criarEstoque));
+  router.get('/', auth, admin, asyncHandler(controller.listarEstoques));
+  router.get('/materiais', auth, admin, asyncHandler(controller.listarMateriais));
   router.post('/materiais', auth, admin, validate(criarMaterialSchema), asyncHandler(controller.criarMaterial));
 
   router.post('/:id/entradas', auth, admin, validate(movimentacaoEstoqueSchema), asyncHandler(controller.registrarEntrada));
@@ -32,6 +34,7 @@ export function estoqueRoutes(container) {
     asyncHandler(controller.atribuirUsuario),
   );
   router.get('/:id/saldo', auth, validate(estoqueIdParamSchema), asyncHandler(controller.consultarSaldo));
+  router.get('/:id/movimentacoes', auth, validate(estoqueIdParamSchema), asyncHandler(controller.listarMovimentacoes));
 
   return router;
 }

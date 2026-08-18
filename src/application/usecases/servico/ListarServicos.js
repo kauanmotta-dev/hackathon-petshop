@@ -3,7 +3,7 @@ export class ListarServicos {
     this.servicoRepository = servicoRepository;
   }
 
-  async execute() {
-    return this.servicoRepository.listarAtivos();
+  async execute({ apenasAtivos = true } = {}) {
+    return apenasAtivos ? this.servicoRepository.listarAtivos() : this.servicoRepository.listar();
   }
 }

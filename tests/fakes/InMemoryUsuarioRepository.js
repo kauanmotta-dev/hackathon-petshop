@@ -44,4 +44,13 @@ export class InMemoryUsuarioRepository extends UsuarioRepository {
     usuario.adicionarTelefone(telefone);
     return usuario;
   }
+
+  async listarPorFuncoes(funcoes) {
+    return [...this.usuarios.values()].filter((u) => u.ativo && u.funcoes.some((f) => funcoes.includes(f)));
+  }
+
+  async atualizarSenha(usuarioId, senhaHash) {
+    const usuario = await this.buscarPorId(usuarioId);
+    usuario.senhaHash = senhaHash;
+  }
 }

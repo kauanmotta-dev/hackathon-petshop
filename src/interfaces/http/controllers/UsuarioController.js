@@ -7,6 +7,7 @@ function serializarUsuario(usuario) {
     nome: usuario.nome,
     email: usuario.email,
     cpf: usuario.cpf,
+    ativo: usuario.ativo,
     funcoes: usuario.funcoes,
     telefones: usuario.telefones,
   };
@@ -45,6 +46,10 @@ export class UsuarioController {
 
   atualizar = async (req, res) => {
     garantirSelfOuAdmin(req, req.params.id);
+    const ehAdmin = req.user.funcoes.includes(FuncaoNome.ADMIN);
+    if (req.body.ativo !== undefined && !ehAdmin) {
+      throw new ForbiddenError('Apenas administradores podem ativar ou inativar usuários');
+    }
     const usuario = await this.usecases.atualizarUsuario.execute({ usuarioId: req.params.id, ...req.body });
     res.status(200).json({ data: serializarUsuario(usuario) });
   };
@@ -64,5 +69,24 @@ export class UsuarioController {
       telefone: req.body.telefone,
     });
     res.status(201).json({ data: serializarUsuario(usuario) });
+  };
+
+  listarEquipe = async (req, res) => {
+    const equipe = await this.usecases.listarEquipe.execute();
+    res.status(200).json({ data: equipe.map((u) => ({ id: u.id, nome: u.nome, funcoes: u.funcoes })) });
+  };
+
+  meuPerfil = async (req, res) => {
+    const usuario = await this.usecases.buscarUsuarioPorId.execute({ usuarioId: req.user.id });
+    res.status(200).json({ data: serializarUsuario(usuario) });
+  };
+
+  alterarSenha = async (req, res) => {
+    await this.usecases.alterarSenha.execute({
+      usuarioId: req.user.id,
+      senhaAtual: req.body.senhaAtual,
+      novaSenha: req.body.novaSenha,
+    });
+    res.status(204).send();
   };
 }

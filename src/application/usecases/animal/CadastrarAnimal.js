@@ -5,8 +5,18 @@ export class CadastrarAnimal {
     this.animalRepository = animalRepository;
   }
 
-  async execute({ usuarioId, nome, especie, raca }) {
-    const animal = new Animal({ usuarioId, nome, especie, raca });
+  async execute({ usuarioId, nome, especie, raca, porte, dataNascimento, cor, observacoes, condicoes }) {
+    const animal = new Animal({
+      usuarioId,
+      nome,
+      especie,
+      raca,
+      porte,
+      dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
+      cor,
+      observacoes,
+      condicoes,
+    });
     return this.animalRepository.salvar(animal);
   }
 }

@@ -2,7 +2,7 @@ import { ValidationError } from '../errors/ValidationError.js';
 import { Dinheiro } from '../value-objects/Dinheiro.js';
 
 export class Servico {
-  constructor({ id, nome, preco, duracaoMinutos, ativo = true }) {
+  constructor({ id, nome, descricao = '', preco, duracaoMinutos, portes = [], especies = [], ativo = true }) {
     if (!nome || nome.trim().length < 1) {
       throw new ValidationError('Nome do serviço é obrigatório');
     }
@@ -12,8 +12,11 @@ export class Servico {
 
     this.id = id;
     this.nome = nome.trim();
+    this.descricao = descricao ?? '';
     this.preco = new Dinheiro(preco).valor;
     this.duracaoMinutos = Number(duracaoMinutos);
+    this.portes = [...portes];
+    this.especies = [...especies];
     this.ativo = ativo;
   }
 
@@ -21,12 +24,15 @@ export class Servico {
     this.ativo = false;
   }
 
-  atualizar({ nome, preco, duracaoMinutos }) {
+  atualizar({ nome, descricao, preco, duracaoMinutos, portes, especies, ativo }) {
     if (nome !== undefined) {
       if (!nome || nome.trim().length < 1) {
         throw new ValidationError('Nome do serviço é obrigatório');
       }
       this.nome = nome.trim();
+    }
+    if (descricao !== undefined) {
+      this.descricao = descricao ?? '';
     }
     if (preco !== undefined) {
       this.preco = new Dinheiro(preco).valor;
@@ -36,6 +42,15 @@ export class Servico {
         throw new ValidationError('Duração do serviço deve ser maior que zero');
       }
       this.duracaoMinutos = Number(duracaoMinutos);
+    }
+    if (portes !== undefined) {
+      this.portes = [...portes];
+    }
+    if (especies !== undefined) {
+      this.especies = [...especies];
+    }
+    if (ativo !== undefined) {
+      this.ativo = Boolean(ativo);
     }
   }
 }

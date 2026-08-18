@@ -2,8 +2,11 @@ function serializarServico(servico) {
   return {
     id: servico.id,
     nome: servico.nome,
+    descricao: servico.descricao,
     preco: servico.preco,
     duracaoMinutos: servico.duracaoMinutos,
+    portes: servico.portes,
+    especies: servico.especies,
     ativo: servico.ativo,
   };
 }
@@ -29,7 +32,9 @@ export class ServicoController {
   };
 
   listar = async (req, res) => {
-    const servicos = await this.usecases.listarServicos.execute();
+    const funcoes = req.user?.funcoes ?? [];
+    const ehStaff = funcoes.includes('ADMIN') || funcoes.includes('BANHISTA');
+    const servicos = await this.usecases.listarServicos.execute({ apenasAtivos: !ehStaff });
     res.status(200).json({ data: servicos.map(serializarServico) });
   };
 }

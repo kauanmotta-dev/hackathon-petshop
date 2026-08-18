@@ -23,6 +23,10 @@ export class InMemoryServicoRepository extends ServicoRepository {
     return [...this.servicos.values()].filter((s) => s.ativo);
   }
 
+  async listar() {
+    return [...this.servicos.values()];
+  }
+
   async listarPorIds(ids) {
     return ids.map((id) => this.servicos.get(Number(id))).filter(Boolean);
   }

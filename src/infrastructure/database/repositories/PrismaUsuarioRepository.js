@@ -14,6 +14,7 @@ function toDomain(registro) {
     email: registro.email,
     senhaHash: registro.senhaHash,
     cpf: registro.cpf,
+    ativo: registro.ativo,
     funcoes: registro.funcoes.map((uf) => uf.funcao.nome),
     telefones: registro.telefones.map((t) => t.telefone),
   });
@@ -103,6 +104,7 @@ export class PrismaUsuarioRepository extends UsuarioRepository {
         nome: usuario.nome,
         email: usuario.email,
         cpf: usuario.cpf,
+        ativo: usuario.ativo,
       },
       include: INCLUDE_RELACOES,
     });
@@ -115,5 +117,21 @@ export class PrismaUsuarioRepository extends UsuarioRepository {
       data: { usuarioId: Number(usuarioId), telefone },
     });
     return this.buscarPorId(usuarioId);
+  }
+
+  async atualizarSenha(usuarioId, senhaHash) {
+    await this.prisma.usuario.update({
+      where: { id: Number(usuarioId) },
+      data: { senhaHash },
+    });
+  }
+
+  async listarPorFuncoes(funcoes) {
+    const registros = await this.prisma.usuario.findMany({
+      where: { ativo: true, funcoes: { some: { funcao: { nome: { in: funcoes } } } } },
+      include: INCLUDE_RELACOES,
+      orderBy: { nome: 'asc' },
+    });
+    return registros.map(toDomain);
   }
 }

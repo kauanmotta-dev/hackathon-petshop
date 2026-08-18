@@ -3,7 +3,7 @@ import { BusinessRuleError } from '../errors/BusinessRuleError.js';
 import { FuncaoNome } from './Funcao.js';
 
 export class Usuario {
-  constructor({ id, nome, email, senhaHash, cpf = null, funcoes = [FuncaoNome.CLIENTE], telefones = [] }) {
+  constructor({ id, nome, email, senhaHash, cpf = null, ativo = true, funcoes = [FuncaoNome.CLIENTE], telefones = [] }) {
     if (!nome || nome.trim().length < 2) {
       throw new ValidationError('Nome do usuário deve ter ao menos 2 caracteres');
     }
@@ -16,12 +16,21 @@ export class Usuario {
     this.email = email;
     this.senhaHash = senhaHash;
     this.cpf = cpf;
+    this.ativo = ativo;
     this.funcoes = [...new Set(funcoes)];
     this.telefones = telefones;
   }
 
   temFuncao(funcao) {
     return this.funcoes.includes(funcao);
+  }
+
+  ativar() {
+    this.ativo = true;
+  }
+
+  inativar() {
+    this.ativo = false;
   }
 
   adicionarFuncao(funcao) {

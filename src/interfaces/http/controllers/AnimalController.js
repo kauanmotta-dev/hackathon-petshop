@@ -5,6 +5,11 @@ function serializarAnimal(animal) {
     nome: animal.nome,
     especie: animal.especie,
     raca: animal.raca,
+    porte: animal.porte,
+    dataNascimento: animal.dataNascimento,
+    cor: animal.cor,
+    observacoes: animal.observacoes,
+    condicoes: animal.condicoes,
     prontuario: animal.prontuario ? serializarProntuario(animal.prontuario) : null,
   };
 }

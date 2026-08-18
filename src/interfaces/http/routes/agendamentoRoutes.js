@@ -21,6 +21,7 @@ export function agendamentoRoutes(container) {
   const equipe = exigirFuncao([FuncaoNome.BANHISTA, FuncaoNome.ADMIN]);
 
   router.post('/', auth, validate(criarAgendamentoSchema), asyncHandler(controller.criar));
+  router.get('/', auth, admin, asyncHandler(controller.listarTodos));
   router.get('/cliente', auth, asyncHandler(controller.listarDoCliente));
   router.get('/banhista', auth, exigirFuncao([FuncaoNome.BANHISTA]), asyncHandler(controller.listarDoBanhista));
 
@@ -31,6 +32,8 @@ export function agendamentoRoutes(container) {
 
   router.post('/:id/iniciar', auth, equipe, validate(agendamentoIdParamSchema), asyncHandler(controller.iniciar));
   router.post('/:id/finalizar', auth, equipe, validate(agendamentoIdParamSchema), asyncHandler(controller.finalizar));
+
+  router.get('/:id', auth, validate(agendamentoIdParamSchema), asyncHandler(controller.buscarPorId));
 
   return router;
 }

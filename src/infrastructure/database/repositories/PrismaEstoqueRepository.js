@@ -1,10 +1,25 @@
 import { EstoqueRepository } from '../../../domain/repositories/EstoqueRepository.js';
 import { Estoque } from '../../../domain/entities/Estoque.js';
 import { MaterialEstoque } from '../../../domain/entities/Material.js';
+import { MovimentacaoEstoque } from '../../../domain/entities/MovimentacaoEstoque.js';
 
 function toDomain(registro) {
   if (!registro) return null;
-  return new Estoque({ id: registro.id, nome: registro.nome });
+  return new Estoque({ id: registro.id, nome: registro.nome, descricao: registro.descricao });
+}
+
+function movimentacaoToDomain(registro) {
+  if (!registro) return null;
+  return new MovimentacaoEstoque({
+    id: registro.id,
+    materialId: registro.materialId,
+    estoqueId: registro.estoqueId,
+    usuarioId: registro.usuarioId,
+    tipo: registro.tipo,
+    quantidade: Number(registro.quantidade),
+    observacoes: registro.observacoes,
+    criadoEm: registro.criadoEm,
+  });
 }
 
 function saldoToDomain(registro) {
@@ -24,7 +39,7 @@ export class PrismaEstoqueRepository extends EstoqueRepository {
   }
 
   async salvar(estoque) {
-    const criado = await this.prisma.estoque.create({ data: { nome: estoque.nome } });
+    const criado = await this.prisma.estoque.create({ data: { nome: estoque.nome, descricao: estoque.descricao } });
     return toDomain(criado);
   }
 
@@ -67,8 +82,15 @@ export class PrismaEstoqueRepository extends EstoqueRepository {
       orderBy: { id: 'asc' },
     });
     return registros.map((registro) => ({
-      material: { id: registro.material.id, nome: registro.material.nome, tipo: registro.material.tipo },
-      quantidade: registro.quantidade,
+      material: {
+        id: registro.material.id,
+        nome: registro.material.nome,
+        tipo: registro.material.tipo,
+        unidade: registro.material.unidade,
+        categoria: registro.material.categoria,
+        quantidadeCritica: Number(registro.material.quantidadeCritica),
+      },
+      quantidade: Number(registro.quantidade),
     }));
   }
 
@@ -96,5 +118,33 @@ export class PrismaEstoqueRepository extends EstoqueRepository {
       return null;
     }
     return this.buscarSaldo(estoqueId, materialId);
+  }
+
+  async registrarMovimentacao({ estoqueId, materialId, usuarioId, tipo, quantidade, observacoes }) {
+    const criado = await this.prisma.movimentacaoEstoque.create({
+      data: {
+        estoqueId: Number(estoqueId),
+        materialId: Number(materialId),
+        usuarioId: usuarioId ? Number(usuarioId) : null,
+        tipo,
+        quantidade,
+        observacoes: observacoes ?? '',
+      },
+    });
+    return movimentacaoToDomain(criado);
+  }
+
+  async listarMovimentacoes(estoqueId) {
+    const registros = await this.prisma.movimentacaoEstoque.findMany({
+      where: { estoqueId: Number(estoqueId) },
+      include: { material: true, usuario: { select: { id: true, nome: true } } },
+      orderBy: { criadoEm: 'desc' },
+    });
+    return registros.map((registro) => ({
+      ...movimentacaoToDomain(registro),
+      materialNome: registro.material.nome,
+      unidade: registro.material.unidade,
+      usuarioNome: registro.usuario ? registro.usuario.nome : null,
+    }));
   }
 }

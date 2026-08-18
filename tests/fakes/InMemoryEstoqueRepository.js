@@ -8,8 +8,10 @@ export class InMemoryEstoqueRepository extends EstoqueRepository {
     this.estoques = new Map();
     this.saldos = new Map();
     this.vinculos = new Set();
+    this.movimentacoes = [];
     this.proximoEstoqueId = 1;
     this.proximoSaldoId = 1;
+    this.proximaMovimentacaoId = 1;
   }
 
   _chaveSaldo(estoqueId, materialId) {
@@ -74,5 +76,24 @@ export class InMemoryEstoqueRepository extends EstoqueRepository {
     });
     this.saldos.set(chave, salvo);
     return salvo;
+  }
+
+  async registrarMovimentacao({ estoqueId, materialId, usuarioId, tipo, quantidade, observacoes }) {
+    const registro = {
+      id: this.proximaMovimentacaoId++,
+      estoqueId: Number(estoqueId),
+      materialId: Number(materialId),
+      usuarioId: usuarioId ?? null,
+      tipo,
+      quantidade,
+      observacoes: observacoes ?? '',
+      criadoEm: new Date(),
+    };
+    this.movimentacoes.push(registro);
+    return registro;
+  }
+
+  async listarMovimentacoes(estoqueId) {
+    return this.movimentacoes.filter((m) => m.estoqueId === Number(estoqueId));
   }
 }

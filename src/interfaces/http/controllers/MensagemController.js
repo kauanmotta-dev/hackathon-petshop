@@ -5,6 +5,7 @@ function serializarMensagem(mensagem) {
     destinatarioId: mensagem.destinatarioId,
     conteudo: mensagem.conteudo,
     tipo: mensagem.tipo,
+    lida: mensagem.lida,
     dataEnvio: mensagem.dataEnvio,
   };
 }
@@ -28,5 +29,18 @@ export class MensagemController {
       outroUsuarioId: req.params.usuarioId,
     });
     res.status(200).json({ data: mensagens.map(serializarMensagem) });
+  };
+
+  marcarComoLida = async (req, res) => {
+    await this.usecases.marcarConversaComoLida.execute({
+      usuarioId: req.user.id,
+      outroUsuarioId: req.params.usuarioId,
+    });
+    res.status(204).send();
+  };
+
+  listarContatos = async (req, res) => {
+    const contatos = await this.usecases.listarContatosDeMensagens.execute({ usuarioId: req.user.id });
+    res.status(200).json({ data: contatos });
   };
 }

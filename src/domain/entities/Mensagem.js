@@ -6,7 +6,15 @@ export const TipoMensagem = Object.freeze({
 });
 
 export class Mensagem {
-  constructor({ id, remetenteId = null, destinatarioId, conteudo, tipo = TipoMensagem.MANUAL, dataEnvio = new Date() }) {
+  constructor({
+    id,
+    remetenteId = null,
+    destinatarioId,
+    conteudo,
+    tipo = TipoMensagem.MANUAL,
+    lida = false,
+    dataEnvio = new Date(),
+  }) {
     if (!destinatarioId) {
       throw new ValidationError('Mensagem precisa de um destinatário');
     }
@@ -25,7 +33,12 @@ export class Mensagem {
     this.destinatarioId = destinatarioId;
     this.conteudo = conteudo.trim();
     this.tipo = tipo;
+    this.lida = lida;
     this.dataEnvio = dataEnvio;
+  }
+
+  marcarComoLida() {
+    this.lida = true;
   }
 
   static criarNotificacaoSistema({ id, destinatarioId, conteudo, dataEnvio = new Date() }) {

@@ -7,7 +7,7 @@ export class RegistrarEntradaEstoque {
     this.materialRepository = materialRepository;
   }
 
-  async execute({ estoqueId, materialId, quantidade }) {
+  async execute({ estoqueId, materialId, quantidade, observacoes, usuarioId }) {
     const estoque = await this.estoqueRepository.buscarPorId(estoqueId);
     if (!estoque) throw new NotFoundError('Estoque não encontrado');
 
@@ -19,6 +19,15 @@ export class RegistrarEntradaEstoque {
       throw new ValidationError('Quantidade de entrada deve ser maior que zero');
     }
 
-    return this.estoqueRepository.incrementarSaldo(estoqueId, materialId, quantidadeNumerica);
+    const saldo = await this.estoqueRepository.incrementarSaldo(estoqueId, materialId, quantidadeNumerica);
+    await this.estoqueRepository.registrarMovimentacao({
+      estoqueId,
+      materialId,
+      usuarioId,
+      tipo: 'ENTRADA',
+      quantidade: quantidadeNumerica,
+      observacoes,
+    });
+    return saldo;
   }
 }

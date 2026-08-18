@@ -42,6 +42,14 @@ export const atualizarUsuarioSchema = z.object({
     nome: z.string().min(2).optional(),
     email: z.string().email().optional(),
     cpf: z.string().optional(),
+    ativo: z.coerce.boolean().optional(),
+  }),
+});
+
+export const alterarSenhaSchema = z.object({
+  body: z.object({
+    senhaAtual: z.string().min(1),
+    novaSenha: z.string().min(8),
   }),
 });
 

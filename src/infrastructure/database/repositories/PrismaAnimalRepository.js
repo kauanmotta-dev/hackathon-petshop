@@ -10,6 +10,11 @@ function toDomain(registro) {
     nome: registro.nome,
     especie: registro.especie,
     raca: registro.raca,
+    porte: registro.porte,
+    dataNascimento: registro.dataNascimento,
+    cor: registro.cor,
+    observacoes: registro.observacoes,
+    condicoes: registro.condicoes,
     prontuario: registro.prontuario ? prontuarioToDomain(registro.prontuario) : null,
   });
 }
@@ -37,6 +42,11 @@ export class PrismaAnimalRepository extends AnimalRepository {
         nome: animal.nome,
         especie: animal.especie,
         raca: animal.raca,
+        porte: animal.porte,
+        dataNascimento: animal.dataNascimento,
+        cor: animal.cor,
+        observacoes: animal.observacoes,
+        condicoes: animal.condicoes,
       },
       include: { prontuario: true },
     });
@@ -63,7 +73,16 @@ export class PrismaAnimalRepository extends AnimalRepository {
   async atualizar(animal) {
     const atualizado = await this.prisma.animal.update({
       where: { id: animal.id },
-      data: { nome: animal.nome, especie: animal.especie, raca: animal.raca },
+      data: {
+        nome: animal.nome,
+        especie: animal.especie,
+        raca: animal.raca,
+        porte: animal.porte,
+        dataNascimento: animal.dataNascimento,
+        cor: animal.cor,
+        observacoes: animal.observacoes,
+        condicoes: animal.condicoes,
+      },
       include: { prontuario: true },
     });
     return toDomain(atualizado);

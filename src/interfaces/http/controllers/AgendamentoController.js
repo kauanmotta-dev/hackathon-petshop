@@ -62,13 +62,27 @@ export class AgendamentoController {
   };
 
   listarDoCliente = async (req, res) => {
-    const agendamentos = await this.usecases.listarAgendamentosDoCliente.execute({ clienteId: req.user.id });
-    res.status(200).json({ data: agendamentos.map(serializarAgendamento) });
+    const agendamentos = await this.usecases.listarAgendamentosDetalhados.execute({ clienteId: req.user.id });
+    res.status(200).json({ data: agendamentos });
   };
 
   listarDoBanhista = async (req, res) => {
-    const agendamentos = await this.usecases.listarAgendaDoBanhista.execute({ banhistaId: req.user.id });
-    res.status(200).json({ data: agendamentos.map(serializarAgendamento) });
+    const agendamentos = await this.usecases.listarAgendamentosDetalhados.execute({ banhistaId: req.user.id });
+    res.status(200).json({ data: agendamentos });
+  };
+
+  listarTodos = async (req, res) => {
+    const agendamentos = await this.usecases.listarAgendamentosDetalhados.execute({});
+    res.status(200).json({ data: agendamentos });
+  };
+
+  buscarPorId = async (req, res) => {
+    const agendamento = await this.usecases.buscarAgendamentoDetalhado.execute({
+      agendamentoId: req.params.id,
+      requesterId: req.user.id,
+      requesterFuncoes: req.user.funcoes,
+    });
+    res.status(200).json({ data: agendamento });
   };
 
   iniciar = async (req, res) => {

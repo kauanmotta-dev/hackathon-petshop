@@ -23,8 +23,16 @@ export class UsuarioRepository {
     throw new Error('UsuarioRepository.listar não implementado');
   }
 
+  async listarPorFuncoes(_funcoes) {
+    throw new Error('UsuarioRepository.listarPorFuncoes não implementado');
+  }
+
   async atualizar(_usuario) {
     throw new Error('UsuarioRepository.atualizar não implementado');
+  }
+
+  async atualizarSenha(_usuarioId, _senhaHash) {
+    throw new Error('UsuarioRepository.atualizarSenha não implementado');
   }
 
   async adicionarTelefone(_usuarioId, _telefone) {

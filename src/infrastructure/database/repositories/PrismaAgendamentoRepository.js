@@ -20,6 +20,37 @@ function toDomain(registro) {
 
 const INCLUDE_SERVICOS = { servicos: true };
 
+const INCLUDE_DETALHES = {
+  cliente: { select: { id: true, nome: true } },
+  banhista: { select: { id: true, nome: true } },
+  animal: { select: { id: true, nome: true } },
+  servicos: { include: { servico: true } },
+};
+
+function toDetalhado(registro) {
+  if (!registro) return null;
+  const servicos = registro.servicos.map((item) => ({
+    id: item.servico.id,
+    nome: item.servico.nome,
+    preco: Number(item.servico.preco),
+    duracaoMinutos: item.servico.duracaoMinutos,
+  }));
+  return {
+    id: registro.id,
+    clienteId: registro.clienteId,
+    clienteNome: registro.cliente.nome,
+    banhistaId: registro.banhistaId,
+    banhistaNome: registro.banhista ? registro.banhista.nome : null,
+    animalId: registro.animalId,
+    animalNome: registro.animal.nome,
+    data: registro.data,
+    hora: registro.hora,
+    status: registro.status,
+    servicos,
+    precoTotal: servicos.reduce((soma, servico) => soma + servico.preco, 0),
+  };
+}
+
 function formatarDiaLocal(data) {
   return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
 }
@@ -86,6 +117,27 @@ export class PrismaAgendamentoRepository extends AgendamentoRepository {
       orderBy: [{ data: 'desc' }, { hora: 'desc' }],
     });
     return registros.map(toDomain);
+  }
+
+  async listarComDetalhes({ clienteId, banhistaId } = {}) {
+    const where = {};
+    if (clienteId) where.clienteId = Number(clienteId);
+    if (banhistaId) where.banhistaId = Number(banhistaId);
+
+    const registros = await this.prisma.agendamento.findMany({
+      where,
+      include: INCLUDE_DETALHES,
+      orderBy: [{ data: 'desc' }, { hora: 'desc' }],
+    });
+    return registros.map(toDetalhado);
+  }
+
+  async buscarComDetalhesPorId(id) {
+    const registro = await this.prisma.agendamento.findUnique({
+      where: { id: Number(id) },
+      include: INCLUDE_DETALHES,
+    });
+    return toDetalhado(registro);
   }
 
   async listarAtivosPorBanhistaNoIntervalo(banhistaId, inicio, fim) {

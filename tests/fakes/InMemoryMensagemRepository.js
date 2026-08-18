@@ -31,4 +31,32 @@ export class InMemoryMensagemRepository extends MensagemRepository {
       )
       .sort((a, b) => a.dataEnvio - b.dataEnvio);
   }
+
+  async marcarConversaComoLida(usuarioId, outroUsuarioId) {
+    for (const mensagem of this.mensagens.values()) {
+      if (
+        mensagem.tipo === TipoMensagem.MANUAL &&
+        mensagem.destinatarioId === usuarioId &&
+        mensagem.remetenteId === outroUsuarioId
+      ) {
+        mensagem.lida = true;
+      }
+    }
+  }
+
+  async listarContatos(usuarioId) {
+    const contatos = new Map();
+    for (const mensagem of [...this.mensagens.values()].sort((a, b) => a.dataEnvio - b.dataEnvio)) {
+      if (mensagem.tipo !== TipoMensagem.MANUAL) continue;
+      const outroId =
+        mensagem.remetenteId === usuarioId
+          ? mensagem.destinatarioId
+          : mensagem.destinatarioId === usuarioId
+            ? mensagem.remetenteId
+            : null;
+      if (outroId === null) continue;
+      contatos.set(outroId, { usuarioId: outroId, ultimaMensagem: mensagem.conteudo, ultimaMensagemEm: mensagem.dataEnvio });
+    }
+    return [...contatos.values()];
+  }
 }

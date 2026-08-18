@@ -3,7 +3,14 @@ import { Material } from '../../../domain/entities/Material.js';
 
 function toDomain(registro) {
   if (!registro) return null;
-  return new Material({ id: registro.id, nome: registro.nome, tipo: registro.tipo });
+  return new Material({
+    id: registro.id,
+    nome: registro.nome,
+    tipo: registro.tipo,
+    unidade: registro.unidade,
+    categoria: registro.categoria,
+    quantidadeCritica: Number(registro.quantidadeCritica),
+  });
 }
 
 export class PrismaMaterialRepository extends MaterialRepository {
@@ -13,7 +20,15 @@ export class PrismaMaterialRepository extends MaterialRepository {
   }
 
   async salvar(material) {
-    const criado = await this.prisma.material.create({ data: { nome: material.nome, tipo: material.tipo } });
+    const criado = await this.prisma.material.create({
+      data: {
+        nome: material.nome,
+        tipo: material.tipo,
+        unidade: material.unidade,
+        categoria: material.categoria,
+        quantidadeCritica: material.quantidadeCritica,
+      },
+    });
     return toDomain(criado);
   }
 

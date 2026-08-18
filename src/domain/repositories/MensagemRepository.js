@@ -14,4 +14,12 @@ export class MensagemRepository {
   async listarConversa(_usuarioIdA, _usuarioIdB) {
     throw new Error('MensagemRepository.listarConversa não implementado');
   }
+
+  async listarContatos(_usuarioId) {
+    throw new Error('MensagemRepository.listarContatos não implementado');
+  }
+
+  async marcarConversaComoLida(_usuarioId, _outroUsuarioId) {
+    throw new Error('MensagemRepository.marcarConversaComoLida não implementado');
+  }
 }

@@ -24,6 +24,9 @@ import { AtribuirFuncaoUsuario } from '../application/usecases/usuario/AtribuirF
 import { CadastrarTelefoneUsuario } from '../application/usecases/usuario/CadastrarTelefoneUsuario.js';
 import { AtualizarUsuario } from '../application/usecases/usuario/AtualizarUsuario.js';
 import { ListarUsuarios } from '../application/usecases/usuario/ListarUsuarios.js';
+import { ListarEquipe } from '../application/usecases/usuario/ListarEquipe.js';
+import { BuscarUsuarioPorId } from '../application/usecases/usuario/BuscarUsuarioPorId.js';
+import { AlterarSenha } from '../application/usecases/usuario/AlterarSenha.js';
 
 import { CadastrarAnimal } from '../application/usecases/animal/CadastrarAnimal.js';
 import { AtualizarAnimal } from '../application/usecases/animal/AtualizarAnimal.js';
@@ -42,8 +45,8 @@ import { AdicionarServicoAoAgendamento } from '../application/usecases/agendamen
 import { AtribuirBanhistaAoAgendamento } from '../application/usecases/agendamento/AtribuirBanhistaAoAgendamento.js';
 import { ReagendarAgendamento } from '../application/usecases/agendamento/ReagendarAgendamento.js';
 import { CancelarAgendamento } from '../application/usecases/agendamento/CancelarAgendamento.js';
-import { ListarAgendamentosDoCliente } from '../application/usecases/agendamento/ListarAgendamentosDoCliente.js';
-import { ListarAgendaDoBanhista } from '../application/usecases/agendamento/ListarAgendaDoBanhista.js';
+import { ListarAgendamentosDetalhados } from '../application/usecases/agendamento/ListarAgendamentosDetalhados.js';
+import { BuscarAgendamentoDetalhado } from '../application/usecases/agendamento/BuscarAgendamentoDetalhado.js';
 import { IniciarBanho } from '../application/usecases/agendamento/IniciarBanho.js';
 import { FinalizarBanho } from '../application/usecases/agendamento/FinalizarBanho.js';
 
@@ -57,9 +60,14 @@ import { RegistrarEntradaEstoque } from '../application/usecases/estoque/Registr
 import { RegistrarSaidaEstoque } from '../application/usecases/estoque/RegistrarSaidaEstoque.js';
 import { AtribuirUsuarioAoEstoque } from '../application/usecases/estoque/AtribuirUsuarioAoEstoque.js';
 import { ConsultarSaldoEstoque } from '../application/usecases/estoque/ConsultarSaldoEstoque.js';
+import { ListarEstoques } from '../application/usecases/estoque/ListarEstoques.js';
+import { ListarMateriais } from '../application/usecases/estoque/ListarMateriais.js';
+import { ListarMovimentacoesEstoque } from '../application/usecases/estoque/ListarMovimentacoesEstoque.js';
 
 import { EnviarMensagem } from '../application/usecases/mensagem/EnviarMensagem.js';
 import { ListarConversaDoUsuario } from '../application/usecases/mensagem/ListarConversaDoUsuario.js';
+import { MarcarConversaComoLida } from '../application/usecases/mensagem/MarcarConversaComoLida.js';
+import { ListarContatosDeMensagens } from '../application/usecases/mensagem/ListarContatosDeMensagens.js';
 
 // Repositórios (adapters do lado da persistência para os ports de domain/repositories)
 const usuarioRepository = new PrismaUsuarioRepository(prisma);
@@ -83,6 +91,9 @@ const atribuirFuncaoUsuario = new AtribuirFuncaoUsuario({ usuarioRepository });
 const cadastrarTelefoneUsuario = new CadastrarTelefoneUsuario({ usuarioRepository });
 const atualizarUsuario = new AtualizarUsuario({ usuarioRepository });
 const listarUsuarios = new ListarUsuarios({ usuarioRepository });
+const listarEquipe = new ListarEquipe({ usuarioRepository });
+const buscarUsuarioPorId = new BuscarUsuarioPorId({ usuarioRepository });
+const alterarSenha = new AlterarSenha({ usuarioRepository, hashProvider });
 
 // Casos de uso — Animal
 const cadastrarAnimal = new CadastrarAnimal({ animalRepository });
@@ -108,8 +119,8 @@ const atribuirBanhistaAoAgendamento = new AtribuirBanhistaAoAgendamento({
 });
 const reagendarAgendamento = new ReagendarAgendamento({ agendamentoRepository, servicoRepository });
 const cancelarAgendamento = new CancelarAgendamento({ agendamentoRepository });
-const listarAgendamentosDoCliente = new ListarAgendamentosDoCliente({ agendamentoRepository });
-const listarAgendaDoBanhista = new ListarAgendaDoBanhista({ agendamentoRepository });
+const listarAgendamentosDetalhados = new ListarAgendamentosDetalhados({ agendamentoRepository });
+const buscarAgendamentoDetalhado = new BuscarAgendamentoDetalhado({ agendamentoRepository });
 const iniciarBanho = new IniciarBanho({ agendamentoRepository, eventDispatcher });
 const finalizarBanho = new FinalizarBanho({ agendamentoRepository, eventDispatcher });
 
@@ -125,10 +136,15 @@ const registrarEntradaEstoque = new RegistrarEntradaEstoque({ estoqueRepository,
 const registrarSaidaEstoque = new RegistrarSaidaEstoque({ estoqueRepository, materialRepository });
 const atribuirUsuarioAoEstoque = new AtribuirUsuarioAoEstoque({ estoqueRepository, usuarioRepository });
 const consultarSaldoEstoque = new ConsultarSaldoEstoque({ estoqueRepository });
+const listarEstoques = new ListarEstoques({ estoqueRepository });
+const listarMateriais = new ListarMateriais({ materialRepository });
+const listarMovimentacoesEstoque = new ListarMovimentacoesEstoque({ estoqueRepository });
 
 // Casos de uso — Mensagem
 const enviarMensagem = new EnviarMensagem({ mensagemRepository, usuarioRepository });
 const listarConversaDoUsuario = new ListarConversaDoUsuario({ mensagemRepository });
+const marcarConversaComoLida = new MarcarConversaComoLida({ mensagemRepository });
+const listarContatosDeMensagens = new ListarContatosDeMensagens({ mensagemRepository });
 
 // Épico 6: o disparo da notificação é assíncrono/desacoplado da mudança de
 // status do agendamento — assinado aqui, na composition root, para que
@@ -166,6 +182,9 @@ export const container = {
       cadastrarTelefoneUsuario,
       atualizarUsuario,
       listarUsuarios,
+      listarEquipe,
+      buscarUsuarioPorId,
+      alterarSenha,
     },
     animal: {
       cadastrarAnimal,
@@ -187,8 +206,8 @@ export const container = {
       atribuirBanhistaAoAgendamento,
       reagendarAgendamento,
       cancelarAgendamento,
-      listarAgendamentosDoCliente,
-      listarAgendaDoBanhista,
+      listarAgendamentosDetalhados,
+      buscarAgendamentoDetalhado,
       iniciarBanho,
       finalizarBanho,
     },
@@ -204,10 +223,15 @@ export const container = {
       registrarSaidaEstoque,
       atribuirUsuarioAoEstoque,
       consultarSaldoEstoque,
+      listarEstoques,
+      listarMateriais,
+      listarMovimentacoesEstoque,
     },
     mensagem: {
       enviarMensagem,
       listarConversaDoUsuario,
+      marcarConversaComoLida,
+      listarContatosDeMensagens,
     },
   },
 };

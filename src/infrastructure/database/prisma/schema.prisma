@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum StatusAgendamento {
@@ -19,12 +20,18 @@ enum TipoMensagem {
   NOTIFICACAO
 }
 
+enum TipoMovimentacao {
+  ENTRADA
+  SAIDA
+}
+
 model Usuario {
   id        Int      @id @default(autoincrement())
   nome      String
   email     String   @unique
   senhaHash String   @map("senha_hash")
   cpf       String?  @unique
+  ativo     Boolean  @default(true)
   criadoEm  DateTime @default(now()) @map("criado_em")
 
   telefones          UsuarioTelefone[]
@@ -35,6 +42,7 @@ model Usuario {
   estoques           UsuarioEstoque[]
   mensagensEnviadas  Mensagem[]          @relation("MensagemRemetente")
   mensagensRecebidas Mensagem[]          @relation("MensagemDestinatario")
+  movimentacoesEstoque MovimentacaoEstoque[]
 
   @@map("usuario")
 }
@@ -71,11 +79,16 @@ model UsuarioTelefone {
 }
 
 model Animal {
-  id        Int     @id @default(autoincrement())
-  usuarioId Int     @map("usuario_id")
-  nome      String
-  especie   String
-  raca      String?
+  id             Int       @id @default(autoincrement())
+  usuarioId      Int       @map("usuario_id")
+  nome           String
+  especie        String
+  raca           String?
+  porte          String?
+  dataNascimento DateTime? @db.Date @map("data_nascimento")
+  cor            String?
+  observacoes    String    @default("")
+  condicoes      String    @default("")
 
   usuario     Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   prontuario  Prontuario?
@@ -98,8 +111,11 @@ model Prontuario {
 model Servico {
   id              Int     @id @default(autoincrement())
   nome            String
+  descricao       String  @default("")
   preco           Decimal @db.Decimal(10, 2)
   duracaoMinutos  Int     @map("duracao_minutos")
+  portes          String[] @default([])
+  especies        String[] @default([])
   ativo           Boolean @default(true)
 
   agendamentos AgendamentoServico[]
@@ -138,36 +154,60 @@ model AgendamentoServico {
 }
 
 model Estoque {
-  id   Int    @id @default(autoincrement())
-  nome String
+  id        Int    @id @default(autoincrement())
+  nome      String
+  descricao String @default("")
 
   materiais MaterialEstoque[]
   usuarios  UsuarioEstoque[]
+  movimentacoes MovimentacaoEstoque[]
 
   @@map("estoque")
 }
 
 model Material {
-  id   Int    @id @default(autoincrement())
-  nome String
-  tipo String
+  id                Int     @id @default(autoincrement())
+  nome              String
+  tipo              String
+  unidade           String  @default("unidades")
+  categoria         String  @default("Geral")
+  quantidadeCritica Decimal @default(0) @db.Decimal(10, 2) @map("quantidade_critica")
 
   estoques MaterialEstoque[]
+  movimentacoes MovimentacaoEstoque[]
 
   @@map("material")
 }
 
 model MaterialEstoque {
-  id         Int @id @default(autoincrement())
-  materialId Int @map("material_id")
-  estoqueId  Int @map("estoque_id")
-  quantidade Int @default(0)
+  id         Int     @id @default(autoincrement())
+  materialId Int     @map("material_id")
+  estoqueId  Int     @map("estoque_id")
+  quantidade Decimal @default(0) @db.Decimal(10, 2)
 
   material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
   estoque  Estoque  @relation(fields: [estoqueId], references: [id], onDelete: Cascade)
 
   @@unique([materialId, estoqueId])
   @@map("material_estoque")
+}
+
+model MovimentacaoEstoque {
+  id          Int              @id @default(autoincrement())
+  materialId  Int              @map("material_id")
+  estoqueId   Int              @map("estoque_id")
+  usuarioId   Int?             @map("usuario_id")
+  tipo        TipoMovimentacao
+  quantidade  Decimal          @db.Decimal(10, 2)
+  observacoes String           @default("")
+  criadoEm    DateTime         @default(now()) @map("criado_em")
+
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  estoque  Estoque  @relation(fields: [estoqueId], references: [id], onDelete: Cascade)
+  usuario  Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([estoqueId, criadoEm])
+  @@map("movimentacao_estoque")
 }
 
 model UsuarioEstoque {
@@ -188,6 +228,7 @@ model Mensagem {
   destinatarioId Int          @map("destinatario_id")
   conteudo       String
   tipo           TipoMensagem @default(MANUAL)
+  lida           Boolean      @default(false)
   dataEnvio      DateTime     @default(now()) @map("data_envio")
 
   remetente    Usuario? @relation("MensagemRemetente", fields: [remetenteId], references: [id])

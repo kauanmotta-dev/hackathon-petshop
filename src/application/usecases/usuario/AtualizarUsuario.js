@@ -8,7 +8,7 @@ export class AtualizarUsuario {
     this.usuarioRepository = usuarioRepository;
   }
 
-  async execute({ usuarioId, nome, email, cpf }) {
+  async execute({ usuarioId, nome, email, cpf, ativo }) {
     const usuario = await this.usuarioRepository.buscarPorId(usuarioId);
     if (!usuario) {
       throw new NotFoundError('Usuário não encontrado');
@@ -38,6 +38,10 @@ export class AtualizarUsuario {
 
     if (nome !== undefined) {
       usuario.nome = nome.trim();
+    }
+
+    if (ativo !== undefined) {
+      usuario.ativo = Boolean(ativo);
     }
 
     return this.usuarioRepository.atualizar(usuario);

@@ -15,6 +15,10 @@ export class ServicoRepository {
     throw new Error('ServicoRepository.listarAtivos não implementado');
   }
 
+  async listar() {
+    throw new Error('ServicoRepository.listar não implementado');
+  }
+
   async listarPorIds(_ids) {
     throw new Error('ServicoRepository.listarPorIds não implementado');
   }
